@@ -36,9 +36,9 @@ if (process.env.NODE_ENV !== 'production') {
 
   const hasProxy =
     typeof Proxy !== 'undefined' && isNative(Proxy)
-
   if (hasProxy) {
     const isBuiltInModifier = makeMap('stop,prevent,self,ctrl,shift,alt,meta,exact')
+    //拦截器，排除指定的keyCode
     config.keyCodes = new Proxy(config.keyCodes, {
       set (target, key, value) {
         if (isBuiltInModifier(key)) {

@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>调试</title>
+</head>
+<body>
+<div id="app">
+    <todo :todo-data="groceryList"></todo>
+    <todo1 v-test_directive="changeColor" />
+</div>
+</body>
+<script type="text/javascript" src="./dist/vue.js"></script>
+<script type="text/javascript">
+  /*function filter1() {
+    console.log('========vue use1');
+  }
+  function filter2(){
+    console.log('========vue use2');
+  }
+  function filter3(){
+    console.log('========vue use3');
+  }
+  Vue.use(filter1,filter2,filter3);
+  Vue.mixin({author: 'grdevper'});
+
+  const vm = new Vue({
+    el: '#app',
+    data:{
+      message: 'test'
+    },
+    components: {
+
+    },
+    methods:{
+      a:function () {
+        console.log('test1')
+      }
+    },
+
+  });
+  console.log(vm);*/
+</script>
+<script type="text/javascript">
+  //Vue.extend 组件构造器
+var todoItem = Vue.extend({
+   template: `<ul><li>{{text}}</li>{{a | total}}</ul>`,
+   props: {
+     text: {
+       type: String,
+       default: ''
+     }
+   },
+  computed:{ //不能计算监控data里面的属性
+    a: function () {
+      return 1;
+    }
+  }
+});
+var todoWrap = Vue.extend({
+  template:
+    `<ul>
+        <todo-item
+           v-for="(item, index) in todoData"
+           v-text="item.text"
+        />
+    </ul>`,
+  props: {
+    todoData: {
+      type: Array,
+      default: []
+    }
+  },
+  components:{
+    todoItem,
+  }
+});
+Vue.component('todo1', todoItem); //注册到全局中去 方法见assets.js
+Vue.component('todo', todoWrap);
+Vue.directive('test_directive', function(el, bind, vNode){ //定义钩子
+  el.style.color = bind.value();
+});
+
+Vue.filter('total', function (value) {
+  return value + 1;//默认第一个参数就是默认要过滤的那个值
+})
+
+const vm = new Vue({
+  el: '#app',
+  data: {
+    groceryList: [
+      { id: 0, text: '蔬菜' },
+      { id: 1, text: '奶酪' },
+      { id: 2, text: '随便其它什么人吃的东西' }
+    ],
+    color:'red',
+    num: 1
+  },
+  methods: {
+    changeColor: function(){
+      return this.color;
+    }
+  }
+})
+console.log(vm);
+</script>
+</html>

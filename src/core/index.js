@@ -6,11 +6,11 @@ import { FunctionalRenderContext } from 'core/vdom/create-functional-component'
 initGlobalAPI(Vue)
 
 Object.defineProperty(Vue.prototype, '$isServer', {
-  get: isServerRendering
+  get: isServerRendering //是否是服务端渲染
 })
 
 Object.defineProperty(Vue.prototype, '$ssrContext', {
-  get () {
+  get () {  //获取服务端渲染内容
     /* istanbul ignore next */
     return this.$vnode && this.$vnode.ssrContext
   }
@@ -18,7 +18,7 @@ Object.defineProperty(Vue.prototype, '$ssrContext', {
 
 // expose FunctionalRenderContext for ssr runtime helper installation
 Object.defineProperty(Vue, 'FunctionalRenderContext', {
-  value: FunctionalRenderContext
+  value: FunctionalRenderContext  //暴露出服务端渲染方法
 })
 
 Vue.version = '__VERSION__'

@@ -10,12 +10,12 @@ export function initUse (Vue: GlobalAPI) {
     }
 
     // additional parameters
-    const args = toArray(arguments, 1)
-    args.unshift(this)
+    const args = toArray(arguments, 1) //注入类数组的多个方法，取出第一个
+    args.unshift(this) //注入Vue
     if (typeof plugin.install === 'function') {
       plugin.install.apply(plugin, args)
     } else if (typeof plugin === 'function') {
-      plugin.apply(null, args)
+      plugin.apply(null, args) //执行插件
     }
     installedPlugins.push(plugin)
     return this

@@ -14,11 +14,11 @@ let uid = 0
 
 export function initMixin (Vue: Class<Component>) {
   Vue.prototype._init = function (options?: Object) {
-    const vm: Component = this
+    const vm: Component = this //this别名
     // a uid
-    vm._uid = uid++
+    vm._uid = uid++ //组件标识
 
-    let startTag, endTag
+    let startTag, endTag //组件性能测试耗时标记
     /* istanbul ignore if */
     if (process.env.NODE_ENV !== 'production' && config.performance && mark) {
       startTag = `vue-perf-start:${vm._uid}`
@@ -28,13 +28,14 @@ export function initMixin (Vue: Class<Component>) {
 
     // a flag to avoid this being observed
     vm._isVue = true
-    // merge options
+    // merge options //服务端渲染
     if (options && options._isComponent) {
       // optimize internal component instantiation
       // since dynamic options merging is pretty slow, and none of the
       // internal component options needs special treatment.
-      initInternalComponent(vm, options)
+      initInternalComponent(vm, options) //将数据挂载到原型链上
     } else {
+      //合并options
       vm.$options = mergeOptions(
         resolveConstructorOptions(vm.constructor),
         options || {},
@@ -43,22 +44,22 @@ export function initMixin (Vue: Class<Component>) {
     }
     /* istanbul ignore else */
     if (process.env.NODE_ENV !== 'production') {
-      initProxy(vm)
+      initProxy(vm)  //添加_renderProxy
     } else {
       vm._renderProxy = vm
     }
     // expose real self
     vm._self = vm
-    initLifecycle(vm)
-    initEvents(vm)
-    initRender(vm)
-    callHook(vm, 'beforeCreate')
+    initLifecycle(vm)  //生命周期的属性
+    initEvents(vm) //更新listener
+    initRender(vm) //更新attrs listenner
+    callHook(vm, 'beforeCreate') //调用钩子函数beforeCreate
     initInjections(vm) // resolve injections before data/props
-    initState(vm)
+    initState(vm) //初始化state
     initProvide(vm) // resolve provide after data/props
     callHook(vm, 'created')
 
-    /* istanbul ignore if */
+    /* istanbul ignore if */ //初始化性能
     if (process.env.NODE_ENV !== 'production' && config.performance && mark) {
       vm._name = formatComponentName(vm, false)
       mark(endTag)
@@ -90,10 +91,11 @@ export function initInternalComponent (vm: Component, options: InternalComponent
   }
 }
 
+//递归找到父类，每层选项和已有不一致时
 export function resolveConstructorOptions (Ctor: Class<Component>) {
   let options = Ctor.options
   if (Ctor.super) {
-    const superOptions = resolveConstructorOptions(Ctor.super)
+    const superOptions = resolveConstructorOptions(Ctor.super) //找到顶级父类
     const cachedSuperOptions = Ctor.superOptions
     if (superOptions !== cachedSuperOptions) {
       // super option changed,
@@ -114,6 +116,7 @@ export function resolveConstructorOptions (Ctor: Class<Component>) {
   return options
 }
 
+//检查是否有后期修改的选项。
 function resolveModifiedOptions (Ctor: Class<Component>): ?Object {
   let modified
   const latest = Ctor.options

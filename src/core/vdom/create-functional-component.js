@@ -17,6 +17,7 @@ import {
   validateProp
 } from '../util/index'
 
+//服务端渲染
 export function FunctionalRenderContext (
   data: VNodeData,
   props: Object,

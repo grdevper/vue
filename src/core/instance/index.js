@@ -14,7 +14,7 @@ function Vue (options) {
   this._init(options)
 }
 
-initMixin(Vue)
+initMixin(Vue) // 组件准备工作
 stateMixin(Vue)
 eventsMixin(Vue)
 lifecycleMixin(Vue)

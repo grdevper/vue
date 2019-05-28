@@ -403,7 +403,7 @@
     devtools: "development" !== 'production',
 
     /**
-     * Whether to record perf
+     * Whether to record perf 是否记录性能
      */
     performance: false,
 
@@ -923,7 +923,7 @@
     this.value = value;
     this.dep = new Dep();
     this.vmCount = 0;
-    def(value, '__ob__', this);
+    def(value, '__ob__', this); //defineProperty 监听state
     if (Array.isArray(value)) {
       if (hasProto) {
         protoAugment(value, arrayMethods);
@@ -944,7 +944,7 @@
   Observer.prototype.walk = function walk (obj) {
     var keys = Object.keys(obj);
     for (var i = 0; i < keys.length; i++) {
-      defineReactive$$1(obj, keys[i]);
+      defineReactive(obj, keys[i]);
     }
   };
 
@@ -1011,15 +1011,14 @@
   /**
    * Define a reactive property on an Object.
    */
-  function defineReactive$$1 (
-    obj,
-    key,
-    val,
-    customSetter,
-    shallow
+  function defineReactive (
+    obj, //vm
+    key, //$attrs
+    val,  //{}
+    customSetter, //
+    shallow  //true
   ) {
     var dep = new Dep();
-
     var property = Object.getOwnPropertyDescriptor(obj, key);
     if (property && property.configurable === false) {
       return
@@ -1103,7 +1102,7 @@
       target[key] = val;
       return val
     }
-    defineReactive$$1(ob.value, key, val);
+    defineReactive(ob.value, key, val);
     ob.dep.notify();
     return val
   }
@@ -1496,9 +1495,9 @@
     var dirs = options.directives;
     if (dirs) {
       for (var key in dirs) {
-        var def$$1 = dirs[key];
-        if (typeof def$$1 === 'function') {
-          dirs[key] = { bind: def$$1, update: def$$1 };
+        var def = dirs[key];
+        if (typeof def === 'function') {
+          dirs[key] = { bind: def, update: def };
         }
       }
     }
@@ -2066,9 +2065,9 @@
 
     var hasProxy =
       typeof Proxy !== 'undefined' && isNative(Proxy);
-
     if (hasProxy) {
       var isBuiltInModifier = makeMap('stop,prevent,self,ctrl,shift,alt,meta,exact');
+      //拦截器，排除指定的keyCode
       config.keyCodes = new Proxy(config.keyCodes, {
         set: function set (target, key, value) {
           if (isBuiltInModifier(key)) {
@@ -2161,13 +2160,13 @@
   var normalizeEvent = cached(function (name) {
     var passive = name.charAt(0) === '&';
     name = passive ? name.slice(1) : name;
-    var once$$1 = name.charAt(0) === '~'; // Prefixed last, checked first
-    name = once$$1 ? name.slice(1) : name;
+    var once = name.charAt(0) === '~'; // Prefixed last, checked first
+    name = once ? name.slice(1) : name;
     var capture = name.charAt(0) === '!';
     name = capture ? name.slice(1) : name;
     return {
       name: name,
-      once: once$$1,
+      once: once,
       capture: capture,
       passive: passive
     }
@@ -2196,13 +2195,13 @@
     on,
     oldOn,
     add,
-    remove$$1,
+    remove,
     createOnceHandler,
     vm
   ) {
-    var name, def$$1, cur, old, event;
+    var name, def, cur, old, event;
     for (name in on) {
-      def$$1 = cur = on[name];
+      def = cur = on[name];
       old = oldOn[name];
       event = normalizeEvent(name);
       if (isUndef(cur)) {
@@ -2226,7 +2225,7 @@
     for (name in oldOn) {
       if (isUndef(on[name])) {
         event = normalizeEvent(name);
-        remove$$1(event.name, oldOn[name], event.capture);
+        remove(event.name, oldOn[name], event.capture);
       }
     }
   }
@@ -2439,7 +2438,7 @@
       Object.keys(result).forEach(function (key) {
         /* istanbul ignore else */
         {
-          defineReactive$$1(vm, key, result[key], function () {
+          defineReactive(vm, key, result[key], function () {
             warn(
               "Avoid mutating an injected value directly since the changes will be " +
               "overwritten whenever the provided component re-renders. " +
@@ -2959,6 +2958,7 @@
 
   /*  */
 
+  //服务端渲染
   function FunctionalRenderContext (
     data,
     props,
@@ -3496,13 +3496,12 @@
     // $attrs & $listeners are exposed for easier HOC creation.
     // they need to be reactive so that HOCs using them are always updated
     var parentData = parentVnode && parentVnode.data;
-
-    /* istanbul ignore else */
+    /* istanbul ignore else */ //vm中定义$attrs $listeners
     {
-      defineReactive$$1(vm, '$attrs', parentData && parentData.attrs || emptyObject, function () {
+      defineReactive(vm, '$attrs', parentData && parentData.attrs || emptyObject, function () {
         !isUpdatingChildComponent && warn("$attrs is readonly.", vm);
       }, true);
-      defineReactive$$1(vm, '$listeners', options._parentListeners || emptyObject, function () {
+      defineReactive(vm, '$listeners', options._parentListeners || emptyObject, function () {
         !isUpdatingChildComponent && warn("$listeners is readonly.", vm);
       }, true);
     }
@@ -3754,6 +3753,7 @@
 
   /*  */
 
+  //初始化事件
   function initEvents (vm) {
     vm._events = Object.create(null);
     vm._hasHookEvent = false;
@@ -3900,6 +3900,7 @@
     }
   }
 
+  //生命周期
   function initLifecycle (vm) {
     var options = vm.$options;
 
@@ -4403,7 +4404,7 @@
 
 
 
-  var uid$2 = 0;
+  var uid$1 = 0;
 
   /**
    * A watcher parses an expression, collects dependencies,
@@ -4433,7 +4434,7 @@
       this.deep = this.user = this.lazy = this.sync = false;
     }
     this.cb = cb;
-    this.id = ++uid$2; // uid for batching
+    this.id = ++uid$1; // uid for batching
     this.active = true;
     this.dirty = this.lazy; // for lazy watchers
     this.deps = [];
@@ -4666,7 +4667,7 @@
             vm
           );
         }
-        defineReactive$$1(props, key, value, function () {
+        defineReactive(props, key, value, function () {
           if (!isRoot && !isUpdatingChildComponent) {
             warn(
               "Avoid mutating a prop directly since the value will be " +
@@ -4793,7 +4794,7 @@
     key,
     userDef
   ) {
-    var shouldCache = !isServerRendering();
+    var shouldCache = !isServerRendering(); //服务端渲染
     if (typeof userDef === 'function') {
       sharedPropertyDefinition.get = shouldCache
         ? createComputedGetter(key)
@@ -4949,15 +4950,15 @@
 
   /*  */
 
-  var uid$3 = 0;
+  var uid$2 = 0;
 
   function initMixin (Vue) {
     Vue.prototype._init = function (options) {
-      var vm = this;
+      var vm = this; //this别名
       // a uid
-      vm._uid = uid$3++;
+      vm._uid = uid$2++; //组件标识
 
-      var startTag, endTag;
+      var startTag, endTag; //组件性能测试耗时标记
       /* istanbul ignore if */
       if (config.performance && mark) {
         startTag = "vue-perf-start:" + (vm._uid);
@@ -4967,13 +4968,14 @@
 
       // a flag to avoid this being observed
       vm._isVue = true;
-      // merge options
+      // merge options //服务端渲染
       if (options && options._isComponent) {
         // optimize internal component instantiation
         // since dynamic options merging is pretty slow, and none of the
         // internal component options needs special treatment.
-        initInternalComponent(vm, options);
+        initInternalComponent(vm, options); //将数据挂载到原型链上
       } else {
+        //合并options
         vm.$options = mergeOptions(
           resolveConstructorOptions(vm.constructor),
           options || {},
@@ -4982,20 +4984,20 @@
       }
       /* istanbul ignore else */
       {
-        initProxy(vm);
+        initProxy(vm);  //添加_renderProxy
       }
       // expose real self
       vm._self = vm;
-      initLifecycle(vm);
-      initEvents(vm);
-      initRender(vm);
-      callHook(vm, 'beforeCreate');
+      initLifecycle(vm);  //生命周期的属性
+      initEvents(vm); //更新listener
+      initRender(vm); //更新attrs listenner
+      callHook(vm, 'beforeCreate'); //调用钩子函数beforeCreate
       initInjections(vm); // resolve injections before data/props
-      initState(vm);
+      initState(vm); //初始化state
       initProvide(vm); // resolve provide after data/props
       callHook(vm, 'created');
 
-      /* istanbul ignore if */
+      /* istanbul ignore if */ //初始化性能
       if (config.performance && mark) {
         vm._name = formatComponentName(vm, false);
         mark(endTag);
@@ -5027,10 +5029,11 @@
     }
   }
 
+  //递归找到父类，每层选项和已有不一致时
   function resolveConstructorOptions (Ctor) {
     var options = Ctor.options;
     if (Ctor.super) {
-      var superOptions = resolveConstructorOptions(Ctor.super);
+      var superOptions = resolveConstructorOptions(Ctor.super); //找到顶级父类
       var cachedSuperOptions = Ctor.superOptions;
       if (superOptions !== cachedSuperOptions) {
         // super option changed,
@@ -5051,6 +5054,7 @@
     return options
   }
 
+  //检查是否有后期修改的选项。
   function resolveModifiedOptions (Ctor) {
     var modified;
     var latest = Ctor.options;
@@ -5072,7 +5076,7 @@
     this._init(options);
   }
 
-  initMixin(Vue);
+  initMixin(Vue); // 组件准备工作
   stateMixin(Vue);
   eventsMixin(Vue);
   lifecycleMixin(Vue);
@@ -5088,12 +5092,12 @@
       }
 
       // additional parameters
-      var args = toArray(arguments, 1);
-      args.unshift(this);
+      var args = toArray(arguments, 1); //注入类数组的多个方法，取出第一个
+      args.unshift(this); //注入Vue
       if (typeof plugin.install === 'function') {
         plugin.install.apply(plugin, args);
       } else if (typeof plugin === 'function') {
-        plugin.apply(null, args);
+        plugin.apply(null, args); //执行插件
       }
       installedPlugins.push(plugin);
       return this
@@ -5102,6 +5106,7 @@
 
   /*  */
 
+  //外部混入
   function initMixin$1 (Vue) {
     Vue.mixin = function (mixin) {
       this.options = mergeOptions(this.options, mixin);
@@ -5111,6 +5116,7 @@
 
   /*  */
 
+  //继承
   function initExtend (Vue) {
     /**
      * Each instance constructor, including Vue, has a unique
@@ -5125,7 +5131,7 @@
      */
     Vue.extend = function (extendOptions) {
       extendOptions = extendOptions || {};
-      var Super = this;
+      var Super = this; //构造函数Vue
       var SuperId = Super.cid;
       var cachedCtors = extendOptions._Ctor || (extendOptions._Ctor = {});
       if (cachedCtors[SuperId]) {
@@ -5140,26 +5146,26 @@
       var Sub = function VueComponent (options) {
         this._init(options);
       };
-      Sub.prototype = Object.create(Super.prototype);
-      Sub.prototype.constructor = Sub;
-      Sub.cid = cid++;
+      Sub.prototype = Object.create(Super.prototype); //copy Vue的原型链作为子类的原型链
+      Sub.prototype.constructor = Sub; //改为子类的构造函数
+      Sub.cid = cid++; //递增cid
       Sub.options = mergeOptions(
         Super.options,
         extendOptions
-      );
-      Sub['super'] = Super;
+      ); //合并父类和子类的option
+      Sub['super'] = Super; //super指向父类
 
       // For props and computed properties, we define the proxy getters on
       // the Vue instances at extension time, on the extended prototype. This
       // avoids Object.defineProperty calls for each instance created.
-      if (Sub.options.props) {
+      if (Sub.options.props) { //子类传入props
         initProps$1(Sub);
       }
       if (Sub.options.computed) {
         initComputed$1(Sub);
       }
 
-      // allow further extension/mixin/plugin usage
+      // allow further extension/mixin/plugin usage 父类的中间件同样适用于子类
       Sub.extend = Super.extend;
       Sub.mixin = Super.mixin;
       Sub.use = Super.use;
@@ -5167,7 +5173,7 @@
       // create asset registers, so extended classes
       // can have their private assets too.
       ASSET_TYPES.forEach(function (type) {
-        Sub[type] = Super[type];
+        Sub[type] = Super[type]; //父类的私有属性适用于子类
       });
       // enable recursive self-lookup
       if (name) {
@@ -5179,10 +5185,10 @@
       // been updated.
       Sub.superOptions = Super.options;
       Sub.extendOptions = extendOptions;
-      Sub.sealedOptions = extend({}, Sub.options);
+      Sub.sealedOptions = extend({}, Sub.options);  //混合options
 
       // cache constructor
-      cachedCtors[SuperId] = Sub;
+      cachedCtors[SuperId] = Sub; //缓存构造函数
       return Sub
     };
   }
@@ -5190,10 +5196,11 @@
   function initProps$1 (Comp) {
     var props = Comp.options.props;
     for (var key in props) {
-      proxy(Comp.prototype, "_props", key);
+      proxy(Comp.prototype, "_props", key); //初始化props;
     }
   }
 
+  //初始化computed
   function initComputed$1 (Comp) {
     var computed = Comp.options.computed;
     for (var key in computed) {
@@ -5205,7 +5212,7 @@
 
   function initAssetRegisters (Vue) {
     /**
-     * Create asset registration methods.
+     * Create asset registration methods. 全局注册方法
      */
     ASSET_TYPES.forEach(function (type) {
       Vue[type] = function (
@@ -5274,9 +5281,9 @@
     keys,
     current
   ) {
-    var cached$$1 = cache[key];
-    if (cached$$1 && (!current || cached$$1.tag !== current.tag)) {
-      cached$$1.componentInstance.$destroy();
+    var cached = cache[key];
+    if (cached && (!current || cached.tag !== current.tag)) {
+      cached.componentInstance.$destroy();
     }
     cache[key] = null;
     remove(keys, key);
@@ -5381,7 +5388,6 @@
       };
     }
     Object.defineProperty(Vue, 'config', configDef);
-
     // exposed util methods.
     // NOTE: these are not considered part of the public API - avoid relying on
     // them unless you are aware of the risk.
@@ -5389,7 +5395,7 @@
       warn: warn,
       extend: extend,
       mergeOptions: mergeOptions,
-      defineReactive: defineReactive$$1
+      defineReactive: defineReactive
     };
 
     Vue.set = set;
@@ -5411,6 +5417,7 @@
     // components with in Weex's multi-instance scenarios.
     Vue.options._base = Vue;
 
+    //继承keepLive组件
     extend(Vue.options.components, builtInComponents);
 
     initUse(Vue);
@@ -5422,11 +5429,11 @@
   initGlobalAPI(Vue);
 
   Object.defineProperty(Vue.prototype, '$isServer', {
-    get: isServerRendering
+    get: isServerRendering //是否是服务端渲染
   });
 
   Object.defineProperty(Vue.prototype, '$ssrContext', {
-    get: function get () {
+    get: function get () {  //获取服务端渲染内容
       /* istanbul ignore next */
       return this.$vnode && this.$vnode.ssrContext
     }
@@ -5434,7 +5441,7 @@
 
   // expose FunctionalRenderContext for ssr runtime helper installation
   Object.defineProperty(Vue, 'FunctionalRenderContext', {
-    value: FunctionalRenderContext
+    value: FunctionalRenderContext  //暴露出服务端渲染方法
   });
 
   Vue.version = '2.6.10';
@@ -5857,13 +5864,13 @@
     }
 
     function createRmCb (childElm, listeners) {
-      function remove$$1 () {
-        if (--remove$$1.listeners === 0) {
+      function remove () {
+        if (--remove.listeners === 0) {
           removeNode(childElm);
         }
       }
-      remove$$1.listeners = listeners;
-      return remove$$1
+      remove.listeners = listeners;
+      return remove
     }
 
     function removeNode (el) {
@@ -5874,7 +5881,7 @@
       }
     }
 
-    function isUnknownElement$$1 (vnode, inVPre) {
+    function isUnknownElement (vnode, inVPre) {
       return (
         !inVPre &&
         !vnode.ns &&
@@ -5923,7 +5930,7 @@
           if (data && data.pre) {
             creatingElmInVPre++;
           }
-          if (isUnknownElement$$1(vnode, creatingElmInVPre)) {
+          if (isUnknownElement(vnode, creatingElmInVPre)) {
             warn(
               'Unknown custom element: <' + tag + '> - did you ' +
               'register the component correctly? For recursive components, ' +
@@ -6021,11 +6028,11 @@
       insert(parentElm, vnode.elm, refElm);
     }
 
-    function insert (parent, elm, ref$$1) {
+    function insert (parent, elm, ref) {
       if (isDef(parent)) {
-        if (isDef(ref$$1)) {
-          if (nodeOps.parentNode(ref$$1) === parent) {
-            nodeOps.insertBefore(parent, elm, ref$$1);
+        if (isDef(ref)) {
+          if (nodeOps.parentNode(ref) === parent) {
+            nodeOps.insertBefore(parent, elm, ref);
           }
         } else {
           nodeOps.appendChild(parent, elm);
@@ -6441,7 +6448,7 @@
     function assertNodeMatch (node, vnode, inVPre) {
       if (isDef(vnode.tag)) {
         return vnode.tag.indexOf('vue-component') === 0 || (
-          !isUnknownElement$$1(vnode, inVPre) &&
+          !isUnknownElement(vnode, inVPre) &&
           vnode.tag.toLowerCase() === (node.tagName && node.tagName.toLowerCase())
         )
       } else {
@@ -7922,20 +7929,20 @@
 
   /*  */
 
-  function resolveTransition (def$$1) {
-    if (!def$$1) {
+  function resolveTransition (def) {
+    if (!def) {
       return
     }
     /* istanbul ignore else */
-    if (typeof def$$1 === 'object') {
+    if (typeof def === 'object') {
       var res = {};
-      if (def$$1.css !== false) {
-        extend(res, autoCssTransition(def$$1.name || 'v'));
+      if (def.css !== false) {
+        extend(res, autoCssTransition(def.name || 'v'));
       }
-      extend(res, def$$1);
+      extend(res, def);
       return res
-    } else if (typeof def$$1 === 'string') {
-      return autoCssTransition(def$$1)
+    } else if (typeof def === 'string') {
+      return autoCssTransition(def)
     }
   }
 
@@ -8415,7 +8422,7 @@
   var transition = inBrowser ? {
     create: _enter,
     activate: _enter,
-    remove: function remove$$1 (vnode, rm) {
+    remove: function remove (vnode, rm) {
       /* istanbul ignore else */
       if (vnode.data.show !== true) {
         leave(vnode, rm);
@@ -8595,10 +8602,10 @@
       var value = ref.value;
 
       vnode = locateNode(vnode);
-      var transition$$1 = vnode.data && vnode.data.transition;
+      var transition = vnode.data && vnode.data.transition;
       var originalDisplay = el.__vOriginalDisplay =
         el.style.display === 'none' ? '' : el.style.display;
-      if (value && transition$$1) {
+      if (value && transition) {
         vnode.data.show = true;
         enter(vnode, function () {
           el.style.display = originalDisplay;
@@ -8615,8 +8622,8 @@
       /* istanbul ignore if */
       if (!value === !oldValue) { return }
       vnode = locateNode(vnode);
-      var transition$$1 = vnode.data && vnode.data.transition;
-      if (transition$$1) {
+      var transition = vnode.data && vnode.data.transition;
+      if (transition) {
         vnode.data.show = true;
         if (value) {
           enter(vnode, function () {
@@ -9280,8 +9287,8 @@
   function parseHTML (html, options) {
     var stack = [];
     var expectHTML = options.expectHTML;
-    var isUnaryTag$$1 = options.isUnaryTag || no;
-    var canBeLeftOpenTag$$1 = options.canBeLeftOpenTag || no;
+    var isUnaryTag = options.isUnaryTag || no;
+    var canBeLeftOpenTag = options.canBeLeftOpenTag || no;
     var index = 0;
     var last, lastTag;
     while (html) {
@@ -9443,12 +9450,12 @@
         if (lastTag === 'p' && isNonPhrasingTag(tagName)) {
           parseEndTag(lastTag);
         }
-        if (canBeLeftOpenTag$$1(tagName) && lastTag === tagName) {
+        if (canBeLeftOpenTag(tagName) && lastTag === tagName) {
           parseEndTag(tagName);
         }
       }
 
-      var unary = isUnaryTag$$1(tagName) || !!unarySlash;
+      var unary = isUnaryTag(tagName) || !!unarySlash;
 
       var l = match.attrs.length;
       var attrs = new Array(l);
@@ -10091,8 +10098,8 @@
   }
 
   function processOnce (el) {
-    var once$$1 = getAndRemoveAttr(el, 'v-once');
-    if (once$$1 != null) {
+    var once = getAndRemoveAttr(el, 'v-once');
+    if (once != null) {
       el.once = true;
     }
   }
@@ -11403,15 +11410,15 @@
           dynamic: attr.dynamic
         }); }))
       : null;
-    var bind$$1 = el.attrsMap['v-bind'];
-    if ((attrs || bind$$1) && !children) {
+    var bind = el.attrsMap['v-bind'];
+    if ((attrs || bind) && !children) {
       res += ",null";
     }
     if (attrs) {
       res += "," + attrs;
     }
-    if (bind$$1) {
-      res += (attrs ? '' : ',null') + "," + bind$$1;
+    if (bind) {
+      res += (attrs ? '' : ',null') + "," + bind;
     }
     return res + ')'
   }
@@ -11641,7 +11648,7 @@
       vm
     ) {
       options = extend({}, options);
-      var warn$$1 = options.warn || warn;
+      var warn$1 = options.warn || warn;
       delete options.warn;
 
       /* istanbul ignore if */
@@ -11651,7 +11658,7 @@
           new Function('return 1');
         } catch (e) {
           if (e.toString().match(/unsafe-eval|CSP/)) {
-            warn$$1(
+            warn$1(
               'It seems you are using the standalone build of Vue.js in an ' +
               'environment with Content Security Policy that prohibits unsafe-eval. ' +
               'The template compiler cannot work in this environment. Consider ' +
@@ -11678,14 +11685,14 @@
         if (compiled.errors && compiled.errors.length) {
           if (options.outputSourceRange) {
             compiled.errors.forEach(function (e) {
-              warn$$1(
+              warn$1(
                 "Error compiling template:\n\n" + (e.msg) + "\n\n" +
                 generateCodeFrame(template, e.start, e.end),
                 vm
               );
             });
           } else {
-            warn$$1(
+            warn$1(
               "Error compiling template:\n\n" + template + "\n\n" +
               compiled.errors.map(function (e) { return ("- " + e); }).join('\n') + '\n',
               vm
@@ -11715,7 +11722,7 @@
       /* istanbul ignore if */
       {
         if ((!compiled.errors || !compiled.errors.length) && fnGenErrors.length) {
-          warn$$1(
+          warn$1(
             "Failed to generate render function:\n\n" +
             fnGenErrors.map(function (ref) {
               var err = ref.err;
@@ -11828,7 +11835,6 @@
   /*  */
 
   var ref$1 = createCompiler(baseOptions);
-  var compile = ref$1.compile;
   var compileToFunctions = ref$1.compileToFunctions;
 
   /*  */

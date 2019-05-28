@@ -4,6 +4,7 @@ import { ASSET_TYPES } from 'shared/constants'
 import { defineComputed, proxy } from '../instance/state'
 import { extend, mergeOptions, validateComponentName } from '../util/index'
 
+//继承
 export function initExtend (Vue: GlobalAPI) {
   /**
    * Each instance constructor, including Vue, has a unique
@@ -18,7 +19,7 @@ export function initExtend (Vue: GlobalAPI) {
    */
   Vue.extend = function (extendOptions: Object): Function {
     extendOptions = extendOptions || {}
-    const Super = this
+    const Super = this //构造函数Vue
     const SuperId = Super.cid
     const cachedCtors = extendOptions._Ctor || (extendOptions._Ctor = {})
     if (cachedCtors[SuperId]) {
@@ -33,26 +34,26 @@ export function initExtend (Vue: GlobalAPI) {
     const Sub = function VueComponent (options) {
       this._init(options)
     }
-    Sub.prototype = Object.create(Super.prototype)
-    Sub.prototype.constructor = Sub
-    Sub.cid = cid++
+    Sub.prototype = Object.create(Super.prototype) //copy Vue的原型链作为子类的原型链
+    Sub.prototype.constructor = Sub //改为子类的构造函数
+    Sub.cid = cid++ //递增cid
     Sub.options = mergeOptions(
       Super.options,
       extendOptions
-    )
-    Sub['super'] = Super
+    ) //合并父类和子类的option
+    Sub['super'] = Super //super指向父类
 
     // For props and computed properties, we define the proxy getters on
     // the Vue instances at extension time, on the extended prototype. This
     // avoids Object.defineProperty calls for each instance created.
-    if (Sub.options.props) {
+    if (Sub.options.props) { //子类传入props
       initProps(Sub)
     }
     if (Sub.options.computed) {
       initComputed(Sub)
     }
 
-    // allow further extension/mixin/plugin usage
+    // allow further extension/mixin/plugin usage 父类的中间件同样适用于子类
     Sub.extend = Super.extend
     Sub.mixin = Super.mixin
     Sub.use = Super.use
@@ -60,7 +61,7 @@ export function initExtend (Vue: GlobalAPI) {
     // create asset registers, so extended classes
     // can have their private assets too.
     ASSET_TYPES.forEach(function (type) {
-      Sub[type] = Super[type]
+      Sub[type] = Super[type] //父类的私有属性适用于子类
     })
     // enable recursive self-lookup
     if (name) {
@@ -72,10 +73,10 @@ export function initExtend (Vue: GlobalAPI) {
     // been updated.
     Sub.superOptions = Super.options
     Sub.extendOptions = extendOptions
-    Sub.sealedOptions = extend({}, Sub.options)
+    Sub.sealedOptions = extend({}, Sub.options)  //混合options
 
     // cache constructor
-    cachedCtors[SuperId] = Sub
+    cachedCtors[SuperId] = Sub //缓存构造函数
     return Sub
   }
 }
@@ -83,10 +84,11 @@ export function initExtend (Vue: GlobalAPI) {
 function initProps (Comp) {
   const props = Comp.options.props
   for (const key in props) {
-    proxy(Comp.prototype, `_props`, key)
+    proxy(Comp.prototype, `_props`, key) //初始化props;
   }
 }
 
+//初始化computed
 function initComputed (Comp) {
   const computed = Comp.options.computed
   for (const key in computed) {

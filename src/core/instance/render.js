@@ -36,8 +36,7 @@ export function initRender (vm: Component) {
   // $attrs & $listeners are exposed for easier HOC creation.
   // they need to be reactive so that HOCs using them are always updated
   const parentData = parentVnode && parentVnode.data
-
-  /* istanbul ignore else */
+  /* istanbul ignore else */ //vm中定义$attrs $listeners
   if (process.env.NODE_ENV !== 'production') {
     defineReactive(vm, '$attrs', parentData && parentData.attrs || emptyObject, () => {
       !isUpdatingChildComponent && warn(`$attrs is readonly.`, vm)
